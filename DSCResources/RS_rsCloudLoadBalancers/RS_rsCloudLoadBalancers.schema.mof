@@ -1,0 +1,18 @@
+﻿[ClassVersion("1.0.0"), FriendlyName("rsCloudLoadBalancers")]
+class RS_rsCloudLoadBalancers : OMI_BaseResource
+{
+    [key] string loadBalancerName;
+    [write, Description("Configured Port")] uint32 port;
+    [write, Description("Protocol")] string protocol;
+    [write, Description("List of Environment Guids to add to load balancer pool")] string nodes[];
+    [write, Description("DataCenter for device")] string dataCenter;
+    [write] string hostHeader;
+    [write] string path;
+    [write] uint32 attemptsBeforeDeactivation;
+    [write] uint32 delay;
+    [write] uint32 timeout;
+    [write] string statusRegex;
+    [write] string type;
+    [write] string algorithm;
+
+};
