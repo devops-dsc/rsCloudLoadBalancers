@@ -25,7 +25,7 @@ Function Get-ServiceCatalog {
       return (Invoke-RestMethod -Uri $("https://identity.api.rackspacecloud.com/v2.0/tokens") -Method POST -Body $(@{"auth" = @{"RAX-KSKEY:apiKeyCredentials" =  @{"username" = $($d.cU); "apiKey" = $($d.cAPI)}}} | convertTo-Json) -ContentType application/json)
    }
    catch {
-      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to retrieve service catalog `n $_.Exception.Message"
+      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to retrieve service catalog `n $($_.Exception.Message)"
    }
 }
 
@@ -45,7 +45,7 @@ Function Get-DevicesInEnvironment {
       $localServers = ((Invoke-RestMethod -Uri $($uri + "/servers/detail") -Method GET -Headers $AuthToken -ContentType application/json).servers)
    }
    catch {
-      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to get list of servers `n $_.Exception.Message"
+      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to get list of servers `n $($_.Exception.Message)"
    }
    foreach($environment in $environmentGuid) {
       if ( ($localServers.metadata | ? { $_ -like "*environmentGuid*"}).count -ne 0 )
@@ -64,7 +64,7 @@ Function Get-DevicesInEnvironment {
          $servers += ((Invoke-RestMethod -Uri $($uri + "/servers/detail") -Method GET -Headers $AuthToken -ContentType application/json).servers)
       }
       catch {
-         Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to retrieve list of servers `n $_.Exception.Message"
+         Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to retrieve list of servers `n $($_.Exception.Message)"
       }
    }
    foreach($environment in $environmentGuid) {
@@ -94,7 +94,7 @@ Function Get-CloudLoadBalancers {
       $loadBalancer = (((Invoke-RestMethod -Uri $uri -Method GET -Headers $AuthToken -ContentType application/json).loadBalancers) | ? {$_.name -eq $loadBalancerName}).id
    }
    catch {
-      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Get-CloudLoadBalancers:Failed to retrieve load balancer information `n $uri `n $_.Exception.Message"
+      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Get-CloudLoadBalancers:Failed to retrieve load balancer information `n $uri `n $($_.Exception.Message)"
    }
    if($loadBalancer) {
       $uri = ($uri, $loadBalancer, "nodes" -join '/')
@@ -102,7 +102,7 @@ Function Get-CloudLoadBalancers {
          $serversInPool = (Invoke-RestMethod -Uri $uri -Method Get -Headers $AuthToken -ContentType application/json)
       }
       catch {
-         Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Get-CloudLoadBalancers:Failed to retrieve nodes in load balancer pool `n $_.Exception.Message"
+         Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Get-CloudLoadBalancers:Failed to retrieve nodes in load balancer pool `n $($_.Exception.Message)"
       }
       $nodeAddresses = @()
       foreach($serverInPool in $serversInPool.nodes) {
@@ -170,13 +170,13 @@ Function Test-TargetResource {
       $loadBalancer = ($loadBalancerinfo).id
    }
    catch {
-      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Test-TargetResource:Failed to retrieve load balancer information `n $_.Exception.Message"
+      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Test-TargetResource:Failed to retrieve load balancer information `n $($_.Exception.Message)"
    }
    try {
       $loadBalancerMonitorInfo = (Invoke-RestMethod -Uri $($uri, $loadBalancer, "healthmonitor" -join '/') -Method Get -Headers $AuthToken -ContentType application/json).healthMonitor
    }
    catch {
-      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Test-TargetResource:Failed to retrieve load balancer Monitoring information `n $uri `n $_.Exception.Message"
+      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Test-TargetResource:Failed to retrieve load balancer Monitoring information `n $uri `n $($_.Exception.Message)"
    }
    if(($loadBalancer) -eq $null) {
       Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Information -EventId 1000 -Message "Load Balancer $loadBalancerName does not exist"
@@ -291,7 +291,7 @@ Function Set-TargetResource {
       $loadBalancer = ($loadBalancerinfo).id
    }
    catch {
-      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Set-TargetResource:Failed to retrieve load balancer information `n $uri `n $_.Exception.Message"
+      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Set-TargetResource:Failed to retrieve load balancer information `n $uri `n $($_.Exception.Message)"
    }
    $loadBalancerIdUri = ($loadBalancerInfoUri, $loadBalancer -join '/')
    $loadBalancerHealthMonitorUri = $uri = (((((($catalog.access.serviceCatalog | Where-Object Name -Match "cloudLoadBalancers").endpoints) | ? {$_.region -eq $dataCenter}).publicURL) + "/loadbalancers"), $loadBalancer, "healthmonitor" -join '/')
@@ -332,31 +332,31 @@ Function Set-TargetResource {
             Invoke-RestMethod -Uri $loadBalancerNodesUri -Method POST -Header $AuthToken -Body $body -ContentType application/json
          }
          catch {
-            Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to add nodes to load balancer pool `n $loadBalancerNodesUri `n $body `n $_.Exception.Message"
+            Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to add nodes to load balancer pool `n $loadBalancerNodesUri `n $body `n $($_.Exception.Message)"
          }
       }
       ### Remove Nodes from LoadBalancer
       if($removeNodeIps) {
+         $ids = @()
          try {
             $serversInPool = (Invoke-RestMethod -Uri $loadBalancerNodesUri -Method Get -Headers $AuthToken -ContentType application/json)
          }
          catch {
-            Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Remove Nodes:Failed to retrieve nodes in load balancer pool `n $loadBalancerNodesUri `n $_.Exception.Message"
+            Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Remove Nodes:Failed to retrieve nodes in load balancer pool `n $loadBalancerNodesUri `n $($_.Exception.Message)"
          }
          foreach($ip in $removeNodeIps) {
-            $ids = ($serversInPool.nodes | ? {$_.address -eq $ip}).id
+            $ids += ($serversInPool.nodes | ? {$_.address -eq $ip}).id
          }
          foreach($id in $ids) {
-            $uri = (((((($catalog.access.serviceCatalog | Where-Object Name -Match "cloudLoadBalancers").endpoints) | ? {$_.region -eq $dataCenter}).publicURL) + "/loadbalancers"), $loadBalancer, $id -join '/')
+            $uri = (((((($catalog.access.serviceCatalog | Where-Object Name -Match "cloudLoadBalancers").endpoints) | ? {$_.region -eq $dataCenter}).publicURL) + "/loadbalancers"), $loadBalancer, "nodes", $id -join '/')
             try {
                Write-EventLog -LogName DevOps -Source RS_rsCloudLoadbalancers -EntryType Information -EventId 1000 -Message "Removing Cloud Server Node $id from Cloud Load Balancer `n $uri"
                (Invoke-RestMethod -Uri $uri -Method Delete -Headers $AuthToken -ContentType application/json)
             }
             catch {
-               Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Remove Nodes:Failed to remove node $id from load balancer `n $uri `n $_.Exception.Message"
+               Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Remove Nodes:Failed to remove node $id from load balancer `n $uri `n $($_.Exception.Message)"
             }
          }
-         
       }
       ### Updating Cloud LoadBalancer configuration
       else {
@@ -364,7 +364,7 @@ Function Set-TargetResource {
             $loadBalancerMonitorInfo = (Invoke-RestMethod -Uri $loadBalancerHealthMonitorUri -Method Get -Headers $AuthToken -ContentType application/json).healthMonitor
          }
          catch {
-            Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Test-TargetResource:Failed to retrieve load balancer Monitoring information `n $loadBalancerHealthMonitorUri `n $_.Exception.Message"
+            Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Test-TargetResource:Failed to retrieve load balancer Monitoring information `n $loadBalancerHealthMonitorUri `n $($_.Exception.Message)"
          }
          if($loadBalancerinfo.port -ne $port -or $loadBalancerinfo.protocol -ne $protocol -or $loadBalancerinfo.algorithm -ne $algorithm) {
             $body = @{ "loadBalancer" = @{ "name" = $loadBalancerName; "port" = $port; "protocol" = $protocol; "algorithm" = $algorithm;}} | ConvertTo-Json
@@ -373,7 +373,7 @@ Function Set-TargetResource {
                Invoke-RestMethod -Uri $loadBalancerIdUri -Method Put -Body $body -Headers $AuthToken -ContentType application/json
             }
             catch {
-               Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to update Load Balancer `n $loadBalancerIdUri `n $body `n $_.Exception.Message"
+               Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to update Load Balancer `n $loadBalancerIdUri `n $body `n $($_.Exception.Message)"
             }
          }
          if($type -eq "HTTP" -or $type -eq "HTTPS") {
@@ -406,7 +406,7 @@ Function Set-TargetResource {
                   $i++
                }
                catch {
-                  Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Test-TargetResource:Failed to retrieve load balancer information `n $_.Exception.Message"
+                  Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Test-TargetResource:Failed to retrieve load balancer information `n $($_.Exception.Message)"
                }
             }
             while($i -lt 3)
@@ -415,7 +415,7 @@ Function Set-TargetResource {
                Invoke-RestMethod -Uri $loadBalancerHealthMonitorUri -Method Put -Body $body -Headers $AuthToken -ContentType application/json
             }
             catch {
-               Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to update health check to Load Balancer `n $loadBalancerHealthMonitorUri `n $body `n $_.Exception.Message"
+               Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to update health check to Load Balancer `n $loadBalancerHealthMonitorUri `n $body `n $($_.Exception.Message)"
             }
          }
       }
@@ -428,7 +428,7 @@ Function Set-TargetResource {
          Invoke-RestMethod -Uri $loadBalancerInfoUri -Method Post -Headers $AuthToken -Body $body -ContentType application/json
       }
       catch {
-         Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to spin up cloud load balancer $loadBalancerName `n $loadBalancerInfoUri `n $_.Exception.Message"
+         Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to spin up cloud load balancer $loadBalancerName `n $loadBalancerInfoUri `n $($_.Exception.Message)"
       }
       if($type -eq "HTTP" -or $type -eq "HTTPS") {
          $body = @{"healthMonitor" = @{ "attemptsBeforeDeactivation" = $attemptsBeforeDeactivation; "delay" = $delay; "path" = $path; "hostHeader" = $hostHeader; "statusRegex" = $statusRegex; "timeout" = $timeout; "type" = $type;}} | ConvertTo-Json
@@ -441,7 +441,7 @@ Function Set-TargetResource {
          Invoke-RestMethod -Uri $loadBalancerHealthMonitorUri -Method Put -Body $body -Headers $AuthToken -ContentType application/json
       }
       catch {
-         Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to add health check to Load Balancer `n $uri `n $body `n $_.Exception.Message"
+         Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to add health check to Load Balancer `n $uri `n $body `n $($_.Exception.Message)"
       }
    }
    
