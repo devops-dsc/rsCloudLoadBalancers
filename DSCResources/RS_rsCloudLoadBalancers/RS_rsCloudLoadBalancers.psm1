@@ -348,7 +348,7 @@ Function Set-TargetResource {
             $ids += ($serversInPool.nodes | ? {$_.address -eq $ip}).id
          }
          foreach($id in $ids) {
-            $uri = (((((($catalog.access.serviceCatalog | Where-Object Name -Match "cloudLoadBalancers").endpoints) | ? {$_.region -eq $dataCenter}).publicURL) + "/loadbalancers"), $loadBalancer, "nodes", $id -join '/')
+            $uri = (((((($catalog.access.serviceCatalog | Where-Object Name -Match "cloudLoadBalancers").endpoints) | ? {$_.region -eq $dataCenter}).publicURL) + "/loadbalancers"), $loadBalancer, "nodes", $($id) -join '/')
             try {
                Write-EventLog -LogName DevOps -Source RS_rsCloudLoadbalancers -EntryType Information -EventId 1000 -Message "Removing Cloud Server Node $id from Cloud Load Balancer `n $uri"
                (Invoke-RestMethod -Uri $uri -Method Delete -Headers $AuthToken -ContentType application/json)
