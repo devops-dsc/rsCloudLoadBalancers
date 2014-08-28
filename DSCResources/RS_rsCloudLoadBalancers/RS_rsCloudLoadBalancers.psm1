@@ -172,15 +172,15 @@ Function Test-TargetResource {
    catch {
       Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Test-TargetResource:Failed to retrieve load balancer information `n $($_.Exception.Message)"
    }
+   if(($loadBalancer) -eq $null) {
+      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Information -EventId 1000 -Message "Load Balancer $loadBalancerName does not exist"
+      return $false
+   }
    try {
       $loadBalancerMonitorInfo = (Invoke-RestMethod -Uri $($uri, $loadBalancer, "healthmonitor" -join '/') -Method Get -Headers $AuthToken -ContentType application/json).healthMonitor
    }
    catch {
       Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Test-TargetResource:Failed to retrieve load balancer Monitoring information `n $uri `n $($_.Exception.Message)"
-   }
-   if(($loadBalancer) -eq $null) {
-      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Information -EventId 1000 -Message "Load Balancer $loadBalancerName does not exist"
-      return $false
    }
    $nodeAddresses = Get-CloudLoadBalancers -loadBalancerName $loadBalancerName -dataCenter $dataCenter
    $servers = Get-DevicesInEnvironment -environmentGuid $nodes -dataCenter $dataCenter
