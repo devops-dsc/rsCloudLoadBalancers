@@ -436,6 +436,15 @@ Function Set-TargetResource {
       else{
          $body = @{"healthMonitor" = @{ "attemptsBeforeDeactivation" = $attemptsBeforeDeactivation; "delay" = $delay; "timeout" = $timeout; "type" = $type;}} | ConvertTo-Json
       }
+      $end = (Get-Date).AddMinutes(3)
+      do {
+          $loadBalancerinfo = (((Invoke-RestMethod -Uri $loadBalancerInfoUri -Method GET -Headers $AuthToken -ContentType application/json).loadBalancers) | ? {$_.name -eq $loadBalancerName})
+          if ( $loadBalancerinfo.status -eq "ACTIVE" ) { break }
+          Start-Sleep -Seconds 2
+      }
+      while ( (Get-Date) -le $end )
+      $loadBalancer = ($loadBalancerinfo).id
+      $loadBalancerHealthMonitorUri = $uri = (((((($catalog.access.serviceCatalog | Where-Object Name -Match "cloudLoadBalancers").endpoints) | ? {$_.region -eq $dataCenter}).publicURL) + "/loadbalancers"), $loadBalancer, "healthmonitor" -join '/')
       try {
          Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Information -EventId 1000 -Message "Creating heath check for Load Balancer `n $uri `n $body"
          Invoke-RestMethod -Uri $loadBalancerHealthMonitorUri -Method Put -Body $body -Headers $AuthToken -ContentType application/json
