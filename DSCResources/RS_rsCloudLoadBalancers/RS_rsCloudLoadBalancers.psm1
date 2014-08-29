@@ -1,25 +1,6 @@
 ﻿$VerbosePreference = "Continue"
 . "C:\cloud-automation\secrets.ps1"
 
-      <#
-      rsCloudLoadBalancers prod_dfwlb
-      {
-         loadBalancerName       = "prod_dfwlb"
-         port                   = 80
-         protocol               = "HTTP"
-         nodes                  = @("64f5a401-c2f8-4188-a7f1-0fe1751e6040")
-         dataCenter             = "DFW"
-         attemptsBeforeDeactivation = 2
-         delay                  = 10
-         path                   = "/"
-         hostHeader             = "windevops.local"
-         statusRegex            = "^[234][0-9][0-9]$"
-         timeout                = 10
-         type                   = "HTTP"
-         algorithm              = "ROUND_ROBIN"
-      }
-      #>
-
 Function Get-ServiceCatalog {
    try {
       return (Invoke-RestMethod -Uri $("https://identity.api.rackspacecloud.com/v2.0/tokens") -Method POST -Body $(@{"auth" = @{"RAX-KSKEY:apiKeyCredentials" =  @{"username" = $($d.cU); "apiKey" = $($d.cAPI)}}} | convertTo-Json) -ContentType application/json)
@@ -328,6 +309,13 @@ Function Set-TargetResource {
          }
          $body = @{"nodes" = @($newNodes)} | ConvertTo-Json -Depth 3
          Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Information -EventId 1000 -Message "Adding nodes to load balancer pool `n (addNodeIps $addNodeIps) `n $body"
+         $end = (Get-Date).AddMinutes(3)
+         do {
+             $loadBalancerinfo = (((Invoke-RestMethod -Uri $loadBalancerInfoUri -Method GET -Headers $AuthToken -ContentType application/json).loadBalancers) | ? {$_.name -eq $loadBalancerName})
+             if ( $loadBalancerinfo.status -eq "ACTIVE" ) { break }
+             Start-Sleep -Seconds 2
+         }
+         while ( (Get-Date) -le $end )
          try {
             Invoke-RestMethod -Uri $loadBalancerNodesUri -Method POST -Header $AuthToken -Body $body -ContentType application/json
          }
@@ -348,6 +336,13 @@ Function Set-TargetResource {
             $ids += ($serversInPool.nodes | ? {$_.address -eq $ip}).id
          }
          foreach($id in $ids) {
+            $end = (Get-Date).AddMinutes(3)
+            do {
+                $loadBalancerinfo = (((Invoke-RestMethod -Uri $loadBalancerInfoUri -Method GET -Headers $AuthToken -ContentType application/json).loadBalancers) | ? {$_.name -eq $loadBalancerName})
+                if ( $loadBalancerinfo.status -eq "ACTIVE" ) { break }
+                Start-Sleep -Seconds 2
+            }
+            while ( (Get-Date) -le $end )
             $uri = (((((($catalog.access.serviceCatalog | Where-Object Name -Match "cloudLoadBalancers").endpoints) | ? {$_.region -eq $dataCenter}).publicURL) + "/loadbalancers"), $loadBalancer, "nodes", $($id) -join '/')
             try {
                Write-EventLog -LogName DevOps -Source RS_rsCloudLoadbalancers -EntryType Information -EventId 1000 -Message "Removing Cloud Server Node $id from Cloud Load Balancer `n $uri"
