@@ -27,7 +27,7 @@ Function Get-DevicesInEnvironment {
       $localServers = ((Invoke-RestMethod -Uri $($uri + "/servers/detail") -Method GET -Headers $AuthToken -ContentType application/json).servers)
    }
    catch {
-      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to get list of servers `n $($_.Exception.Message)"
+      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to get list of servers `n $($_.Exception.Message)`n $uri"
    }
    foreach($environment in $environmentGuid) {
       if ( ($localServers.metadata | ? { $_ -like "*environmentGuid*"}).count -ne 0 )
