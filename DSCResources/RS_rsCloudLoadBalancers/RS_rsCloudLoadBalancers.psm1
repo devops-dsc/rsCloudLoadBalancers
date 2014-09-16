@@ -19,7 +19,7 @@ Function Get-DevicesInEnvironment {
    $returnValue = @()
    $servers = @()
    $localValue = @()
-   $availableDCs = ($catalog.access.serviceCatalog | Where-Object { $_.name -eq "cloudServersOpenstack" }).endpoints.region
+   $availableDCs = [string[]]($catalog.access.serviceCatalog | Where-Object { $_.name -eq "cloudServersOpenstack" }).endpoints.region
    $dataCenterArray = ($availableDCs -notmatch $dataCenter)
    
    $uri = (($catalog.access.serviceCatalog | ? name -eq "cloudServersOpenStack").endpoints | ? region -eq $dataCenter).publicURL
@@ -27,7 +27,7 @@ Function Get-DevicesInEnvironment {
       $localServers = ((Invoke-RestMethod -Uri $($uri + "/servers/detail") -Method GET -Headers $AuthToken -ContentType application/json).servers)
    }
    catch {
-      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to get list of servers `n $($_.Exception.Message)`n $uri"
+      Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to get list of servers `n $($_.Exception.Message)"
    }
    foreach($environment in $environmentGuid) {
       if ( ($localServers.metadata | ? { $_ -like "*environmentGuid*"}).count -ne 0 )
@@ -46,7 +46,7 @@ Function Get-DevicesInEnvironment {
          $servers += ((Invoke-RestMethod -Uri $($uri + "/servers/detail") -Method GET -Headers $AuthToken -ContentType application/json).servers)
       }
       catch {
-         Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to retrieve list of servers `n $($_.Exception.Message) `n $uri"
+         Write-EventLog -LogName DevOps -Source RS_rsCloudLoadBalancers -EntryType Error -EventId 1002 -Message "Failed to retrieve list of servers `n $($_.Exception.Message)"
       }
    }
    foreach($environment in $environmentGuid) {
