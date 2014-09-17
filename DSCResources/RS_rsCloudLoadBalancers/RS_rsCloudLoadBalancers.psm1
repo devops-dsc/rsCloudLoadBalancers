@@ -19,7 +19,7 @@ Function Get-DevicesInEnvironment {
    $returnValue = @()
    $servers = @()
    $localValue = @()
-   $dataCenterArray = (@("DFW", "ORD", "IAD") -notmatch $dataCenter)
+   $dataCenterArray = (@("DFW", "ORD", "IAD", "LON", "HKG", "SYD") -notmatch $dataCenter)
    
    $uri = (($catalog.access.serviceCatalog | ? name -eq "cloudServersOpenStack").endpoints | ? region -eq $dataCenter).publicURL
    try {
