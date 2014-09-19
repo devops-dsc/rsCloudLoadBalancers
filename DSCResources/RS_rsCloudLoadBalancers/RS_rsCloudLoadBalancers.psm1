@@ -20,7 +20,9 @@ Function Get-DevicesInEnvironment {
    $servers = @()
    $localValue = @()
    #$dataCenterArray = (@("DFW", "ORD", "IAD", "LON", "HKG", "SYD") -notmatch $dataCenter)
-   $dataCenterArray = ($catalog.access.serviceCatalog.endpoints).region | sort -Unique
+   $availableDCs = [string[]]($catalog.access.serviceCatalog | Where-Object { $_.name -eq "cloudServersOpenstack" }).endpoints.region
+   $dataCenterArray = ($availableDCs -notmatch $dataCenter)
+
    $uri = (($catalog.access.serviceCatalog | ? name -eq "cloudServersOpenStack").endpoints | ? region -eq $dataCenter).publicURL
    try {
       $localServers = ((Invoke-RestMethod -Uri $($uri + "/servers/detail") -Method GET -Headers $AuthToken -ContentType application/json).servers)
